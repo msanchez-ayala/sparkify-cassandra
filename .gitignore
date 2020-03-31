@@ -133,3 +133,4 @@ config.py
 
 # Raw Data
 /data/*
+*.csv
