@@ -107,7 +107,6 @@ def process_csvs():
     Cassandra tables.
 
     Also prints out how many rows existed in total vs. in the final CSV.
-
     """
     # Extract raw data from CSV files
     full_data_rows_list = extract_csvs()
@@ -121,41 +120,43 @@ def process_csvs():
     with open('event_datafile_new.csv', 'r', encoding = 'utf8') as f:
         print('Filtered CSV File contains', sum(1 for line in f), 'rows.')
 
-print('Full combined CSV data contains', len(full_data_rows_list), 'rows.')
 
-def insert_data():
+def load_data(session):
     """
-    """
-    pass
-
-def process_data(cur, conn, filepath, func):
-    """
-    Performs ETL for either the song data or log data.
+    Opens the transformed CSV and loads each row into all the three tables
+    as specified by the queries in cql_queries.py.
 
     Parameters
     ----------
-    cur, conn: cursor and connection to sparkifydb
-    filepath: string containing the filepath to either the song_data or log_data
-        directory.
-    func: function that performs ETL on the given set of files (either song or
-        log data).
+    session: a connection to the cassandra cluster.
     """
-    # get all files matching extension from directory
-    all_files = []
-    for root, dirs, files in os.walk(filepath):
-        files = glob.glob(os.path.join(root,'*.json'))
-        for f in files :
-            all_files.append(os.path.abspath(f))
+    # Read filtered CSV
+    with open('event_datafile_new.csv', encoding = 'utf8') as f:
+        csvreader = csv.reader(f)
 
-    # get total number of files found
-    num_files = len(all_files)
-    print('{} files found in {}'.format(num_files, filepath))
+        # Skip header row (column names)
+        next(csvreader)
 
-    # iterate over files and perform ETL
-    for i, datafile in enumerate(all_files, 1):
-        func(cur, datafile)
-        conn.commit()
-        print('{}/{} files processed.'.format(i, num_files))
+        for line in csvreader:
+
+            # First table
+            session.execute(
+                song_info_insert,
+                (line[0], int(line[3]), float(line[5]), int(line[8]), line[9])
+            )
+
+            # Second table
+            session.execute(
+                users_songs_insert,
+                (line[0], line[1], int(line[3]), line[4],
+                 int(line[8]), line[9], int(line[10]))
+            )
+
+            # Third table
+            session.execute(
+                user_name_insert,
+                (line[1], line[4], line[9], int(line[10]))
+            )
 
 
 def main():
@@ -168,13 +169,13 @@ def main():
     session = cluster.connect()
     session.set_keyspace('sparkify')
 
+    # Extract and transform raw data
     process_csvs()
-    insert_data(session, )
 
-    ### FIGURE OUT HOW TO STRUCTURE THIS FOR THE CURRENT DB ##
-    process_data(cur, conn, filepath='data/song_data', func=process_song_file)
-    process_data(cur, conn, filepath='data/log_data', func=process_log_file)
+    # Load into Cassandra tables
+    load_data(session)
 
+    # End the session and connection
     session.shutdown()
     cluster.shutdown()
 
