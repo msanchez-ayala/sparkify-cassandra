@@ -21,20 +21,34 @@ correctly. See instructions at the bottom of this README to run the container.
 
 ![](/images/sparkify_tables.jpeg?raw=true)
 
- The database is organized into three tables to optimize for three queries:
- 1. `song_info`: Give the artist, song title and song's length in the music app
- history that was heard during  sessionId = 338, and itemInSession  = 4.
+The database is organized into three tables to optimize for three queries:
+1. `song_info`: Give the artist, song title and song's length in the music app
+history that was heard during  sessionId = 338, and itemInSession  = 4.
 
- PRIMARY KEY (session_id, item_in_session)
- 2. `users_songs`: Give only the following: name of artist, song (sorted by
-   itemInSession) and user (first and last name) for userid = 10, sessionid =
-   182
+ The primary key is (`session_id`, `item_in_session`) because we put those would
+go in our `WHERE` clause. I have set the partition key to `session_id` because
+we would want to store all of the information for a single session on the same
+node, rather than to have it scattered across nodes. `item_in_session` is the
+clustering column because we might want to order by this column or filter by it.
 
- PRIMARY KEY (user_id, session_id, item_in_session)
- 3. `user_name`: Give every user name (first and last) in my music app history
- who listened to the song 'All Hands Against His Own'
 
- Primary Key (song, user_id)
+2. `users_songs`: Give only the following: name of artist, song (sorted by
+itemInSession) and user (first and last name) for userid = 10, sessionid = 182.
+
+ The primary key is (`user_id`, `session_id`, `item_in_session`) because they
+will appear in our WHERE clause for a query like this. `user_id` is the
+partition key because we will want to store all information by the same user on
+a single node. Next, because we know we want to filter by `session_id` and
+return results sorted by `item_in_session`, then we must use those two columns
+as clustering columns in that order.
+
+3. `user_name`: Give every user name (first and last) in my music app history
+who listened to the song 'All Hands Against His Own'
+
+ The primary key is (`song`, `user_id`) with partition key `song` because we want
+to keep all users who listen to the same song on a single node and filter by
+song. We use `user_id` as a clustering column because we can optionally filter
+by that column.
 
 Of course, these tables can be used to satisfy any other queries that filter on
 the corresponding partition key and clustering columns.
