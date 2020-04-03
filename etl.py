@@ -142,20 +142,20 @@ def load_data(session):
             # First table
             session.execute(
                 song_info_insert,
-                (line[0], int(line[3]), float(line[5]), int(line[8]), line[9])
+                (int(line[8]), int(line[3]), line[0], float(line[5]), line[9])
             )
 
             # Second table
             session.execute(
                 users_songs_insert,
-                (line[0], line[1], int(line[3]), line[4],
-                 int(line[8]), line[9], int(line[10]))
+                (int(line[10]), int(line[8]), int(line[3]), line[0],
+                line[1], line[4], line[9])
             )
 
             # Third table
             session.execute(
                 user_name_insert,
-                (line[1], line[4], line[9], int(line[10]))
+                (line[9], int(line[10]), line[1], line[4])
             )
 
 

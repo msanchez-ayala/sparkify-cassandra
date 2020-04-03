@@ -9,10 +9,10 @@ Author: M. Sanchez-Ayala 3/31/2020
 song_info_create = """
     CREATE TABLE IF NOT EXISTS
       song_info (
-        artist text,
-        item_in_session int,
-        length float,
         session_id int,
+        item_in_session int,
+        artist text,
+        length float,
         song text,
         PRIMARY KEY (session_id, item_in_session)
       )
@@ -21,13 +21,13 @@ song_info_create = """
 users_songs_create = """
     CREATE TABLE IF NOT EXISTS
       users_songs (
+        user_id int,
+        session_id int,
+        item_in_session int,
         artist text,
         first_name text,
-        item_in_session int,
         last_name text,
-        session_id int,
         song text,
-        user_id int,
         PRIMARY KEY (user_id, session_id, item_in_session)
       )
 """
@@ -35,10 +35,10 @@ users_songs_create = """
 user_name_create = """
     CREATE TABLE IF NOT EXISTS
       user_name (
-        last_name text,
-        first_name text,
         song text,
         user_id int,
+        last_name text,
+        first_name text,
         PRIMARY KEY (song, user_id)
       )
 """
@@ -48,10 +48,10 @@ user_name_create = """
 song_info_insert = """
     INSERT INTO
       song_info (
-        artist,
-        item_in_session,
-        length,
         session_id,
+        item_in_session,
+        artist,
+        length,
         song
       )
     VALUES
@@ -61,13 +61,13 @@ song_info_insert = """
 users_songs_insert = """
     INSERT INTO
       users_songs (
+        user_id,
+        session_id,
+        item_in_session,
         artist,
         first_name,
-        item_in_session,
         last_name,
-        session_id,
-        song,
-        user_id
+        song
       )
     VALUES
       (%s, %s, %s, %s, %s, %s, %s)
@@ -76,10 +76,10 @@ users_songs_insert = """
 user_name_insert = """
     INSERT INTO
       user_name (
-        first_name,
-        last_name,
         song,
-        user_id
+        user_id,
+        first_name,
+        last_name
       )
     VALUES
       (%s, %s, %s, %s)
